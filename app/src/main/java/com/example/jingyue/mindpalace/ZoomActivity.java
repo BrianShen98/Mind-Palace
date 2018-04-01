@@ -1,28 +1,31 @@
 package com.example.jingyue.mindpalace;
 
 
+
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 
-public class DisplayScreen extends FragmentActivity{
-
+/**
+ * A sample showing how to zoom an image thumbnail to full-screen, by animating the bounds of the
+ * zoomed image from the thumbnail bounds to the screen bounds.
+ *
+ * <p>In this sample, the user can touch one of two images. Touching an image zooms it in, covering
+ * the entire activity content area. Touching the zoomed-in image hides it.</p>
+ */
+public class ZoomActivity extends FragmentActivity {
     /**
      * Hold a reference to the current animator, so that it can be canceled mid-way.
      */
@@ -35,43 +38,11 @@ public class DisplayScreen extends FragmentActivity{
     private int mShortAnimationDuration;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_screen);
 
-        ImageView src_img = (ImageView)findViewById(R.id.src_img);
-        src_img.bringToFront();
-        //back-to-mainpage button
-        final Button button_back_to_front = (Button) findViewById(R.id.back_to_front);
-        button_back_to_front.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent next = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(next);
-            }
-        });
-
-        //display text button
-        final Button button_display_txt = (Button) findViewById(R.id.display_txt);
-        button_display_txt.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                displayTXT();
-            }
-        });
-
-        //4 lines
-        LineView line1 = (LineView)findViewById(R.id.path1);
-        line1.bringToFront();
-        LineView line2 = (LineView)findViewById(R.id.path2);
-        LineView line3 = (LineView)findViewById(R.id.path3);
-        LineView line4 = (LineView)findViewById(R.id.path4);
-
-
-        line1.init(420,650,305,350);
-        line2.init(660,650,770,340);
-        line3.init(430,890,305,1200);
-        line4.init(660,880,770,1195);
-
-// Hook up clicks on the thumbnail views.
+        // Hook up clicks on the thumbnail views.
 
         final View thumb1View = findViewById(R.id.thumb_button_1);
         thumb1View.setOnClickListener(new View.OnClickListener() {
@@ -89,27 +60,9 @@ public class DisplayScreen extends FragmentActivity{
             }
         });
 
-        final View thumb3View = findViewById(R.id.thumb_button_3);
-        thumb3View.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                zoomImageFromThumb(thumb3View, R.drawable.background);
-            }
-        });
-
-        final View thumb4View = findViewById(R.id.thumb_button_4);
-        thumb4View.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                zoomImageFromThumb(thumb4View, R.drawable.background);
-            }
-        });
-
-
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(android.R.integer.config_shortAnimTime);
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -123,30 +76,6 @@ public class DisplayScreen extends FragmentActivity{
 
         return super.onOptionsItemSelected(item);
     }
-    private void displayTXT()
-    {
-        TextView textView1 = (TextView) findViewById(R.id.text1);
-        TextView textView2 = (TextView) findViewById(R.id.text2);
-        TextView textView3 = (TextView) findViewById(R.id.text3);
-        TextView textView4 = (TextView) findViewById(R.id.text4);
-
-        ImageView imgView1 = (ImageView) findViewById(R.id.img1);
-        ImageView imgView2 = (ImageView) findViewById(R.id.img2);
-        ImageView imgView3 = (ImageView) findViewById(R.id.img3);
-        ImageView imgView4 = (ImageView) findViewById(R.id.img4);
-
-        textView1.setVisibility(View.VISIBLE);
-        textView2.setVisibility(View.VISIBLE);
-        textView3.setVisibility(View.VISIBLE);
-        textView4.setVisibility(View.VISIBLE);
-
-        imgView1.setVisibility(View.INVISIBLE);
-        imgView2.setVisibility(View.INVISIBLE);
-        imgView3.setVisibility(View.INVISIBLE);
-        imgView4.setVisibility(View.INVISIBLE);
-
-    }
-
 
     /**
      * "Zooms" in a thumbnail view by assigning the high resolution image to a hidden "zoomed-in"
