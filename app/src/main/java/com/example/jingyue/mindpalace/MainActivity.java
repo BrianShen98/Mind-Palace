@@ -306,7 +306,11 @@ public class MainActivity extends AppCompatActivity{
             String[] featuresLst = toLength10(json_paser_for_text(ret));
             if(query != Boolean.FALSE){
                 //TODO: pass repeated item
+<<<<<<< HEAD
                 analyzer("\\"+s, 1522573010, "LA", featuresLst);
+=======
+                analyzer("\\"+s, 152257310, "LA", featuresLst);
+>>>>>>> 23c85b6bff9b7687313cf4619a6e7da42b9c7c45
                 return; //TODO: analyzer returns a list of String of uri or \text
             }//Other
             addNewItem("\\"+s, 1522573010, "Shanghai", featuresLst);
