@@ -312,8 +312,10 @@ public class MainActivity extends AppCompatActivity{
             e.printStackTrace();
         }
 
-        String s = callCloudVision(bitmap);
-        String[] featuresLst = toLength10(json_paser_for_label(s));
+        callCloudVision(bitmap);
+        /*
+        String s =
+                String[] featuresLst = toLength10(json_paser_for_label(s));
         if(query != Boolean.FALSE){
             analyzer(uri.toString(), 1522573000, "DongBei", featuresLst); //TODO: it returns a list of string of uri or "\\"+text
             return;
@@ -332,7 +334,7 @@ public class MainActivity extends AppCompatActivity{
         //can add analyzer for testing
 
         Log.d("lkl", s);
-        json_paser_for_label(s);
+        json_paser_for_label(s);*/
     }
 
     private void db_text(String s){
@@ -595,7 +597,7 @@ public class MainActivity extends AppCompatActivity{
             AsyncTask<Object, Void, String> labelDetectionTask = new DetectionTask(this, preparelabelRequest(bitmap));
             AsyncTask<Object, Void, String> landmarkDetectionTask = new DetectionTask(this, preparelandmarkRequest(bitmap));
             AsyncTask<Object, Void, String> logoDetectionTask = new DetectionTask(this, preparelogoRequest(bitmap));
-            return labelDetectionTask.execute().get();
+            return labelDetectionTask.execute().get().toString();
         } catch (IOException e) {
             return "failed to make API request because of other IOException " +
                     e.getMessage();
