@@ -7,6 +7,10 @@
 .DS_Store
 /build
 /captures
+<<<<<<< HEAD
 .externalNativeBuild
 app/src/main/java/com/example/jingyue/mindpalace/DataBase.java
 
+=======
+.externalNativeBuild
+>>>>>>> bd203e5ab65f220b3ac1dff3b03a40ca7f612395

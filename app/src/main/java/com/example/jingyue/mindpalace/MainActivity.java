@@ -137,13 +137,8 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Toolbar toolbar = findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-
-        MindDbHelper dbHelper = new MindDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
-
         //first cold start
+        /*
         if(PermissionUtils.requestPermission(
                 this,
                 CAMERA_PERMISSIONS_REQUEST,
@@ -155,7 +150,14 @@ public class MainActivity extends AppCompatActivity{
                 File file = files[i];
                 db_image(Uri.fromFile(file));
             }
-        }
+        }*/
+
+        //Toolbar toolbar = findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
+
+        MindDbHelper dbHelper = new MindDbHelper(this);
+        mDb = dbHelper.getWritableDatabase();
+
          mInput= (EditText) findViewById(R.id.editText);
 
         final Button button_start = (Button) findViewById(R.id.start);
@@ -310,8 +312,10 @@ public class MainActivity extends AppCompatActivity{
             e.printStackTrace();
         }
 
-        String s = callCloudVision(bitmap);
-        String[] featuresLst = toLength10(json_paser_for_label(s));
+        callCloudVision(bitmap);
+        /*
+        String s =
+                String[] featuresLst = toLength10(json_paser_for_label(s));
         if(query != Boolean.FALSE){
             analyzer(uri.toString(), 1522573000, "DongBei", featuresLst); //TODO: it returns a list of string of uri or "\\"+text
             return;
@@ -330,7 +334,7 @@ public class MainActivity extends AppCompatActivity{
         //can add analyzer for testing
 
         Log.d("lkl", s);
-        json_paser_for_label(s);
+        json_paser_for_label(s);*/
     }
 
     private void db_text(String s){
@@ -592,7 +596,7 @@ public class MainActivity extends AppCompatActivity{
             AsyncTask<Object, Void, String> labelDetectionTask = new DetectionTask(this, preparelabelRequest(bitmap));
             AsyncTask<Object, Void, String> landmarkDetectionTask = new DetectionTask(this, preparelandmarkRequest(bitmap));
             AsyncTask<Object, Void, String> logoDetectionTask = new DetectionTask(this, preparelogoRequest(bitmap));
-            return labelDetectionTask.execute().get();
+            return labelDetectionTask.execute().get().toString();
         } catch (IOException e) {
             return "failed to make API request because of other IOException " +
                     e.getMessage();
