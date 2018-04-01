@@ -227,10 +227,7 @@ public class MainActivity extends AppCompatActivity{
                         scaleBitmapDown(
                                 MediaStore.Images.Media.getBitmap(getContentResolver(), uri),
                                 MAX_DIMENSION);
-
-                callCloudVision(bitmap);
-                //mMainImage.setImageBitmap(bitmap);
-
+                db_image(bitmap);
             } catch (IOException e) {
                 Log.d(TAG, "Image picking failed because " + e.getMessage());
                 Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
@@ -238,6 +235,24 @@ public class MainActivity extends AppCompatActivity{
         } else {
             Log.d(TAG, "Image picker gave us a null image.");
             Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
+        }
+    }
+    private void db_image(Bitmap bitmap){
+            //TODO: remove repeated items
+        String s = callCloudVision(bitmap);
+        //TODO: database
+        json_paser_for_label(s);
+    }
+    private void db_text(String s){
+        AsyncTask<Object, Object, Object> txt = new GGLanguage(s);
+        try {
+            String ret = (String) txt.execute().get();
+            json_paser_for_text(ret);
+            //TODO: databse
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         }
     }
 
@@ -332,28 +347,25 @@ public class MainActivity extends AppCompatActivity{
             }
             return "Cloud Vision API request failed. Check logs for details.";
         }
-
-        protected void onPostExecute(String result) {
-            MainActivity activity = mActivityWeakReference.get();
-            if (activity != null && !activity.isFinishing()) {
-                //TextView imageDetail = activity.findViewById(R.id.image_details);
-                //imageDetail.setText(result);
-            }
-        }
     }
 
-    private void callCloudVision(final Bitmap bitmap) {
+    private String callCloudVision(final Bitmap bitmap) {
         // Switch text to loading
         //mImageDetails.setText(R.string.loading_message);
 
         // Do the real work in an async task, because we need to use the network anyway
         try {
             AsyncTask<Object, Void, String> labelDetectionTask = new LableDetectionTask(this, prepareAnnotationRequest(bitmap));
-            labelDetectionTask.execute();
+            return labelDetectionTask.execute().get();
         } catch (IOException e) {
-            Log.d(TAG, "failed to make API request because of other IOException " +
-                    e.getMessage());
+            return "failed to make API request because of other IOException " +
+                    e.getMessage();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         }
+        return "";
     }
 
     private Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
