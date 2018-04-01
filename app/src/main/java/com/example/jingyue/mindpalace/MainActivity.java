@@ -86,6 +86,7 @@ import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Iterator;
+
 import java.util.LinkedHashSet;
 
 import com.example.jingyue.mindpalace.data.MindContract;
@@ -142,9 +143,20 @@ public class MainActivity extends AppCompatActivity{
         MindDbHelper dbHelper = new MindDbHelper(this);
         mDb = dbHelper.getWritableDatabase();
 
+        //first cold start
+        if(PermissionUtils.requestPermission(
+                this,
+                CAMERA_PERMISSIONS_REQUEST,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA)) {
+            File dir = new File("mnt/sdcard/Download/");
+            File[] files = dir.listFiles();
+            for (int i = 0; i < files.length; ++i) {
+                File file = files[i];
+                db_image(Uri.fromFile(file));
+            }
+        }
          mInput= (EditText) findViewById(R.id.editText);
-
-
 
         final Button button_start = (Button) findViewById(R.id.start);
         button_start.setOnClickListener(new View.OnClickListener() {

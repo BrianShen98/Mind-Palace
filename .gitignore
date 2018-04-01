@@ -9,3 +9,4 @@
 /captures
 .externalNativeBuild
 app/src/main/java/com/example/jingyue/mindpalace/DataBase.java
+app/src/main/java/com/example/jingyue/mindpalace/MainActivity.java
