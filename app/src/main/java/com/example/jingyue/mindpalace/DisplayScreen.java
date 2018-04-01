@@ -66,10 +66,10 @@ public class DisplayScreen extends FragmentActivity{
         LineView line4 = (LineView)findViewById(R.id.path4);
 
 
-        line1.init(420,650,305,350);
-        line2.init(660,650,770,340);
-        line3.init(430,890,305,1200);
-        line4.init(660,880,770,1195);
+        line1.init(430,640,325,330);
+        line2.init(430,700,330,1200);
+        line3.init(725,690,805,1190);
+        line4.init(725,640,805,330);
 
 // Hook up clicks on the thumbnail views.
 
