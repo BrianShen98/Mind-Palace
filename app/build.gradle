@@ -63,7 +63,7 @@ dependencies {
 
     // FlexboxLayout
     compile 'com.google.android:flexbox:0.2.6'
-
+    //compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.4'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
 task copySecretKey(type: Copy) {
@@ -72,5 +72,6 @@ task copySecretKey(type: Copy) {
     include secretKey.getName()
     into 'src/main/res/raw'
     rename secretKey.getName(), "credential.json"
+
 }
 preBuild.dependsOn(copySecretKey)
