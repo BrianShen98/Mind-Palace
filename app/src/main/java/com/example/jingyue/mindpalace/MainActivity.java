@@ -235,6 +235,7 @@ public class MainActivity extends AppCompatActivity{
     private void db_image(Uri uri){
         db_image(uri, Boolean.FALSE);
     }
+
     private void db_image(Uri uri, Boolean query){
         //TODO: remove repeated items
         if(query == Boolean.FALSE){
@@ -251,7 +252,8 @@ public class MainActivity extends AppCompatActivity{
         }
         String s = callCloudVision(bitmap);
         //TODO: database
-        json_paser_for_label(s);
+        Log.d("lkl", s);
+        //json_paser_for_label(s);
     }
 
     private void db_text(String s){
@@ -276,7 +278,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    private Vision.Images.Annotate prepareAnnotationRequest(Bitmap bitmap) throws IOException {
+    private Vision.Images.Annotate preparelabelRequest(Bitmap bitmap) throws IOException {
         HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
@@ -342,12 +344,144 @@ public class MainActivity extends AppCompatActivity{
 
         return annotateRequest;
     }
+    private Vision.Images.Annotate preparelandmarkRequest(Bitmap bitmap) throws IOException {
+        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
-    private static class LableDetectionTask extends AsyncTask<Object, Void, String> {
+        VisionRequestInitializer requestInitializer =
+                new VisionRequestInitializer(CLOUD_VISION_API_KEY) {
+                    /**
+                     * We override this so we can inject important identifying fields into the HTTP
+                     * headers. This enables use of a restricted cloud platform API key.
+                     */
+                    @Override
+                    protected void initializeVisionRequest(VisionRequest<?> visionRequest)
+                            throws IOException {
+                        super.initializeVisionRequest(visionRequest);
+
+                        String packageName = getPackageName();
+                        visionRequest.getRequestHeaders().set(ANDROID_PACKAGE_HEADER, packageName);
+
+                        String sig = PackageManagerUtils.getSignature(getPackageManager(), packageName);
+
+                        visionRequest.getRequestHeaders().set(ANDROID_CERT_HEADER, sig);
+                    }
+                };
+
+        Vision.Builder builder = new Vision.Builder(httpTransport, jsonFactory, null);
+        builder.setVisionRequestInitializer(requestInitializer);
+
+        Vision vision = builder.build();
+
+        BatchAnnotateImagesRequest batchAnnotateImagesRequest =
+                new BatchAnnotateImagesRequest();
+        batchAnnotateImagesRequest.setRequests(new ArrayList<AnnotateImageRequest>() {{
+            AnnotateImageRequest annotateImageRequest = new AnnotateImageRequest();
+
+            // Add the image
+            Image base64EncodedImage = new Image();
+            // Convert the bitmap to a JPEG
+            // Just in case it's a format that Android understands but Cloud Vision
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
+            byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+            // Base64 encode the JPEG
+            base64EncodedImage.encodeContent(imageBytes);
+            annotateImageRequest.setImage(base64EncodedImage);
+
+            // add the features we want
+            annotateImageRequest.setFeatures(new ArrayList<Feature>() {{
+                Feature labelDetection = new Feature();
+                labelDetection.setType("LANDMARK_DETECTION");
+                labelDetection.setMaxResults(MAX_LABEL_RESULTS);
+                add(labelDetection);
+            }});
+
+            // Add the list of one thing to the request
+            add(annotateImageRequest);
+        }});
+
+        Vision.Images.Annotate annotateRequest =
+                vision.images().annotate(batchAnnotateImagesRequest);
+        // Due to a bug: requests to Vision API containing large images fail when GZipped.
+        annotateRequest.setDisableGZipContent(true);
+        Log.d(TAG, "created Cloud Vision request object, sending request");
+
+        return annotateRequest;
+    }
+    private Vision.Images.Annotate preparelogoRequest(Bitmap bitmap) throws IOException {
+        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+        VisionRequestInitializer requestInitializer =
+                new VisionRequestInitializer(CLOUD_VISION_API_KEY) {
+                    /**
+                     * We override this so we can inject important identifying fields into the HTTP
+                     * headers. This enables use of a restricted cloud platform API key.
+                     */
+                    @Override
+                    protected void initializeVisionRequest(VisionRequest<?> visionRequest)
+                            throws IOException {
+                        super.initializeVisionRequest(visionRequest);
+
+                        String packageName = getPackageName();
+                        visionRequest.getRequestHeaders().set(ANDROID_PACKAGE_HEADER, packageName);
+
+                        String sig = PackageManagerUtils.getSignature(getPackageManager(), packageName);
+
+                        visionRequest.getRequestHeaders().set(ANDROID_CERT_HEADER, sig);
+                    }
+                };
+
+        Vision.Builder builder = new Vision.Builder(httpTransport, jsonFactory, null);
+        builder.setVisionRequestInitializer(requestInitializer);
+
+        Vision vision = builder.build();
+
+        BatchAnnotateImagesRequest batchAnnotateImagesRequest =
+                new BatchAnnotateImagesRequest();
+        batchAnnotateImagesRequest.setRequests(new ArrayList<AnnotateImageRequest>() {{
+            AnnotateImageRequest annotateImageRequest = new AnnotateImageRequest();
+
+            // Add the image
+            Image base64EncodedImage = new Image();
+            // Convert the bitmap to a JPEG
+            // Just in case it's a format that Android understands but Cloud Vision
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
+            byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+            // Base64 encode the JPEG
+            base64EncodedImage.encodeContent(imageBytes);
+            annotateImageRequest.setImage(base64EncodedImage);
+
+            // add the features we want
+            annotateImageRequest.setFeatures(new ArrayList<Feature>() {{
+                Feature labelDetection = new Feature();
+                labelDetection.setType("LOGO_DETECTION");
+                labelDetection.setMaxResults(MAX_LABEL_RESULTS);
+                add(labelDetection);
+            }});
+
+            // Add the list of one thing to the request
+            add(annotateImageRequest);
+        }});
+
+        Vision.Images.Annotate annotateRequest =
+                vision.images().annotate(batchAnnotateImagesRequest);
+        // Due to a bug: requests to Vision API containing large images fail when GZipped.
+        annotateRequest.setDisableGZipContent(true);
+        Log.d(TAG, "created Cloud Vision request object, sending request");
+
+        return annotateRequest;
+    }
+
+    private static class DetectionTask extends AsyncTask<Object, Void, String> {
         private final WeakReference<MainActivity> mActivityWeakReference;
         private Vision.Images.Annotate mRequest;
 
-        LableDetectionTask(MainActivity activity, Vision.Images.Annotate annotate) {
+        DetectionTask(MainActivity activity, Vision.Images.Annotate annotate) {
             mActivityWeakReference = new WeakReference<>(activity);
             mRequest = annotate;
         }
@@ -375,8 +509,10 @@ public class MainActivity extends AppCompatActivity{
 
         // Do the real work in an async task, because we need to use the network anyway
         try {
-            AsyncTask<Object, Void, String> labelDetectionTask = new LableDetectionTask(this, prepareAnnotationRequest(bitmap));
-            return labelDetectionTask.execute().get();
+            AsyncTask<Object, Void, String> labelDetectionTask = new DetectionTask(this, preparelabelRequest(bitmap));
+            AsyncTask<Object, Void, String> landmarkDetectionTask = new DetectionTask(this, preparelandmarkRequest(bitmap));
+            AsyncTask<Object, Void, String> logoDetectionTask = new DetectionTask(this, preparelogoRequest(bitmap));
+            return logoDetectionTask.execute().get();
         } catch (IOException e) {
             return "failed to make API request because of other IOException " +
                     e.getMessage();
