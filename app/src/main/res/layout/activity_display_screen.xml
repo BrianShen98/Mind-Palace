@@ -253,7 +253,7 @@
     <ImageView
         android:id="@+id/img1"
         android:layout_width="match_parent"
-        android:layout_height="208dp"
+        android:layout_height="match_parent"
         android:visibility="invisible"
         tools:layout_editor_absoluteY="303dp" />
 
@@ -261,14 +261,14 @@
     <ImageView
         android:id="@+id/img2"
         android:layout_width="match_parent"
-        android:layout_height="210dp"
+        android:layout_height="match_parent"
         android:visibility="invisible"
         tools:layout_editor_absoluteY="301dp" />
 
     <ImageView
         android:id="@+id/img3"
         android:layout_width="match_parent"
-        android:layout_height="206dp"
+        android:layout_height="match_parent"
         android:visibility="invisible"
         tools:layout_editor_absoluteY="305dp" />
 
@@ -276,7 +276,7 @@
     <ImageView
         android:id="@+id/img4"
         android:layout_width="match_parent"
-        android:layout_height="205dp"
+        android:layout_height="match_parent"
         android:visibility="invisible"
         tools:layout_editor_absoluteY="306dp" />
 </android.support.constraint.ConstraintLayout>
