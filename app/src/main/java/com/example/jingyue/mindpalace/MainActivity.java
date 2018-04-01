@@ -137,13 +137,8 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Toolbar toolbar = findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-
-        MindDbHelper dbHelper = new MindDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
-
         //first cold start
+        /*
         if(PermissionUtils.requestPermission(
                 this,
                 CAMERA_PERMISSIONS_REQUEST,
@@ -155,7 +150,14 @@ public class MainActivity extends AppCompatActivity{
                 File file = files[i];
                 db_image(Uri.fromFile(file));
             }
-        }
+        }*/
+        
+        //Toolbar toolbar = findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
+
+        MindDbHelper dbHelper = new MindDbHelper(this);
+        mDb = dbHelper.getWritableDatabase();
+
          mInput= (EditText) findViewById(R.id.editText);
 
         final Button button_start = (Button) findViewById(R.id.start);
