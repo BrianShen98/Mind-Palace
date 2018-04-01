@@ -1,17 +1,22 @@
 package com.example.jingyue.mindpalace;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.FileProvider;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -21,10 +26,23 @@ import android.content.Intent;
 import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.language.v1.CloudNaturalLanguage;
+import com.google.api.services.language.v1.CloudNaturalLanguageRequest;
+import com.google.api.services.language.v1.CloudNaturalLanguageScopes;
+import com.google.api.services.language.v1.model.AnalyzeEntitiesRequest;
+import com.google.api.services.language.v1.model.AnalyzeEntitiesResponse;
+import com.google.api.services.language.v1.model.Document;
+import com.google.api.services.language.v1.model.Entity;
 import com.google.api.services.vision.v1.Vision;
 import com.google.api.services.vision.v1.VisionRequest;
 import com.google.api.services.vision.v1.VisionRequestInitializer;
@@ -42,30 +60,13 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 
 
-
-/*
- * Copyright 2016 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-public class MainActivity extends AppCompatActivity {
-    private static final String CLOUD_VISION_API_KEY = "";//"AIzaSyBD-58JXajoizqSzCVVyYkfsmEvxvfbChQ";
+public class MainActivity extends AppCompatActivity{
+    private static final String CLOUD_VISION_API_KEY = "AIzaSyBD-58JXajoizqSzCVVyYkfsmEvxvfbChQ";
     //BuildConfig.API_KEY;
     public static final String FILE_NAME = "temp.jpg";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
@@ -74,13 +75,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int MAX_DIMENSION = 1200;
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int LOADER_ACCESS_TOKEN = 1;
     private static final int GALLERY_PERMISSIONS_REQUEST = 0;
     private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
-
-    private TextView mImageDetails;
-    private ImageView mMainImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +87,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         //Toolbar toolbar = findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
-
+        prepareApi();
+        analyzeEntities("This page lists Google Cloud Natural Language API sample applications. We will be adding more samples to this page as they are created. To walk through a sample, see installation requirements, and get detailed explanations of the code, see the Sentiment Analysis Tutorial.");
+        Log.d("kk", "done");
         final Button button_start = (Button) findViewById(R.id.start);
         button_start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -100,25 +101,34 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton(R.string.dialog_select_gallery, (dialog, which) -> startGalleryChooser())
                         .setNegativeButton(R.string.dialog_select_camera, (dialog, which) -> startCamera());
                 builder.create().show();
-
             }
         });
-
-
 
         //mImageDetails = findViewById(R.id.image_details);
         //mMainImage = findViewById(R.id.main_image);
     }
 
-    public void startGalleryChooser() {
-        if (PermissionUtils.requestPermission(this, GALLERY_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select a photo"),
-                    GALLERY_IMAGE_REQUEST);
-        }
+/*
+    public List<String> get_picture_labels(){
+        return 0;
+    }*/
+/*
+    public List<String> get_text_labels(){
+        startAnalyze();
     }
+*/
+    /*
+        Google cloud Vision code snippet
+    */
+        public void startGalleryChooser () {
+            if (PermissionUtils.requestPermission(this, GALLERY_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Select a photo"),
+                        GALLERY_IMAGE_REQUEST);
+            }
+        }
 
     public void startCamera() {
         if (PermissionUtils.requestPermission(
@@ -326,6 +336,108 @@ public class MainActivity extends AppCompatActivity {
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
 
+
+
+    /*
+        Google Language Processing
+     */
+    private GoogleCredential mCredential;
+
+    private CloudNaturalLanguage mApi = new CloudNaturalLanguage.Builder(
+            new NetHttpTransport(),
+            JacksonFactory.getDefaultInstance(),
+            new HttpRequestInitializer() {
+                @Override
+                public void initialize(HttpRequest request) throws IOException {
+                    mCredential.initialize(request);
+                }
+            }).build();
+
+    private final BlockingQueue<CloudNaturalLanguageRequest<? extends GenericJson>> mRequests
+            = new ArrayBlockingQueue<>(1);
+
+    private Thread mThread;
+
+
+    private void prepareApi() {
+        // Initiate token refresh
+        getSupportLoaderManager().initLoader(LOADER_ACCESS_TOKEN, null,
+                new LoaderManager.LoaderCallbacks<String>() {
+                    @Override
+                    public Loader<String> onCreateLoader(int id, Bundle args) {
+                        return new AccessTokenLoader(MainActivity.this);
+                    }
+
+                    @Override
+                    public void onLoadFinished(Loader<String> loader, String token) {
+                        setAccessToken(token);
+                    }
+
+                    @Override
+                    public void onLoaderReset(Loader<String> loader) {
+                    }
+                });
+    }
+
+    public void setAccessToken(String token) {
+        mCredential = new GoogleCredential()
+                .setAccessToken(token)
+                .createScoped(CloudNaturalLanguageScopes.all());
+        startWorkerThread();
+    }
+
+    public void analyzeEntities(String text) {
+        try {
+            // Create a new entities API call request and add it to the task queue
+            mRequests.add(mApi
+                    .documents()
+                    .analyzeEntities(new AnalyzeEntitiesRequest()
+                            .setDocument(new Document()
+                                    .setContent(text)
+                                    .setType("PLAIN_TEXT"))));
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to create analyze request.", e);
+        }
+
+    }
+
+    private void startWorkerThread() {
+        if (mThread != null) {
+            return;
+        }
+        mThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    if (mThread == null) {
+                        break;
+                    }
+                    try {
+                        // API calls are executed here in this worker thread
+                        deliverResponse(mRequests.take().execute());
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "Interrupted.", e);
+                        break;
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to execute a request.", e);
+                    }
+                }
+            }
+        });
+        mThread.start();
+    }
+
+    private String deliverResponse(GenericJson response) {
+        //final Activity activity = getActivity();
+        final List<Entity> entities = ((AnalyzeEntitiesResponse) response).getEntities();
+        final int size = entities.size();
+        for (int i = 0; i < size; i++) {
+            Log.d("kk", entities.get(i).toString());
+        }
+
+        return response.toString();
+    }
+
     private static String convertResponseToString(BatchAnnotateImagesResponse response) {
         StringBuilder message = new StringBuilder("\n\n");
 
@@ -338,7 +450,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             message.append("nothing");
         }
-
+        Log.d("kk", message.toString());
         return message.toString();
     }
+
 }
