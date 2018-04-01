@@ -224,24 +224,24 @@ public class MainActivity extends AppCompatActivity{
 
              */
         if (uri != null) {
-            try {
-                // scale the image to save on bandwidth
-                Bitmap bitmap =
-                        scaleBitmapDown(
-                                MediaStore.Images.Media.getBitmap(getContentResolver(), uri),
-                                MAX_DIMENSION);
-                db_image(bitmap);
-            } catch (IOException e) {
-                Log.d(TAG, "Image picking failed because " + e.getMessage());
-                Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
-            }
+            // scale the image to save on bandwidth
+
+            db_image(uri);
         } else {
             Log.d(TAG, "Image picker gave us a null image.");
             Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
         }
     }
-    private void db_image(Bitmap bitmap){
+    private void db_image(Uri uri){
             //TODO: remove repeated items
+        Bitmap bitmap = null;
+        try {
+            bitmap = scaleBitmapDown(
+                    MediaStore.Images.Media.getBitmap(getContentResolver(), uri),
+                    MAX_DIMENSION);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         String s = callCloudVision(bitmap);
         //TODO: database
         json_paser_for_label(s);
