@@ -52,6 +52,14 @@ import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
 import com.google.api.services.vision.v1.model.EntityAnnotation;
 import com.google.api.services.vision.v1.model.Feature;
 import com.google.api.services.vision.v1.model.Image;
+import com.google.api.services.language.v1.CloudNaturalLanguageRequestInitializer;
+import com.google.api.services.language.v1.model.AnalyzeSentimentRequest;
+import com.google.api.services.language.v1.CloudNaturalLanguage;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.language.v1.model.AnalyzeSentimentResponse;
+import com.google.api.services.language.v1.model.Document;
+import com.google.gson.Gson;
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -63,9 +71,13 @@ import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import 	android.graphics.BitmapFactory;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.FileInputStream;
-
-
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity{
     private static final String CLOUD_VISION_API_KEY = "AIzaSyBD-58JXajoizqSzCVVyYkfsmEvxvfbChQ";
@@ -77,7 +89,7 @@ public class MainActivity extends AppCompatActivity{
     private static final int MAX_DIMENSION = 1200;
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int LOADER_ACCESS_TOKEN = 1;
+
     private static final int GALLERY_PERMISSIONS_REQUEST = 0;
     private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
@@ -87,11 +99,10 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        json_paser_for_label("");
         //Toolbar toolbar = findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
-        prepareApi();
-        analyzeEntities("This page lists Google Cloud Natural Language API sample applications. We will be adding more samples to this page as they are created. To walk through a sample, see installation requirements, and get detailed explanations of the code, see the Sentiment Analysis Tutorial.");
-        Log.d("kk", "done");
+
         final Button button_start = (Button) findViewById(R.id.start);
         button_start.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -110,15 +121,6 @@ public class MainActivity extends AppCompatActivity{
         //mMainImage = findViewById(R.id.main_image);
     }
 
-/*
-    public List<String> get_picture_labels(){
-        return 0;
-    }*/
-/*
-    public List<String> get_text_labels(){
-        startAnalyze();
-    }
-*/
     /*
         Google cloud Vision code snippet
     */
@@ -349,122 +351,98 @@ public class MainActivity extends AppCompatActivity{
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
 
-
-
-    /*
-        Google Language Processing
-     */
-    private GoogleCredential mCredential;
-
-    private CloudNaturalLanguage mApi = new CloudNaturalLanguage.Builder(
-            new NetHttpTransport(),
-            JacksonFactory.getDefaultInstance(),
-            new HttpRequestInitializer() {
-                @Override
-                public void initialize(HttpRequest request) throws IOException {
-                    mCredential.initialize(request);
-                }
-            }).build();
-
-    private final BlockingQueue<CloudNaturalLanguageRequest<? extends GenericJson>> mRequests
-            = new ArrayBlockingQueue<>(1);
-
-    private Thread mThread;
-
-
-    private void prepareApi() {
-        // Initiate token refresh
-        getSupportLoaderManager().initLoader(LOADER_ACCESS_TOKEN, null,
-                new LoaderManager.LoaderCallbacks<String>() {
-                    @Override
-                    public Loader<String> onCreateLoader(int id, Bundle args) {
-                        return new AccessTokenLoader(MainActivity.this);
-                    }
-
-                    @Override
-                    public void onLoadFinished(Loader<String> loader, String token) {
-                        setAccessToken(token);
-                    }
-
-                    @Override
-                    public void onLoaderReset(Loader<String> loader) {
-                    }
-                });
-    }
-
-    public void setAccessToken(String token) {
-        mCredential = new GoogleCredential()
-                .setAccessToken(token)
-                .createScoped(CloudNaturalLanguageScopes.all());
-        startWorkerThread();
-    }
-
-    public void analyzeEntities(String text) {
-        try {
-            // Create a new entities API call request and add it to the task queue
-            mRequests.add(mApi
-                    .documents()
-                    .analyzeEntities(new AnalyzeEntitiesRequest()
-                            .setDocument(new Document()
-                                    .setContent(text)
-                                    .setType("PLAIN_TEXT"))));
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to create analyze request.", e);
-        }
-
-    }
-
-    private void startWorkerThread() {
-        if (mThread != null) {
-            return;
-        }
-        mThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    if (mThread == null) {
-                        break;
-                    }
-                    try {
-                        // API calls are executed here in this worker thread
-                        deliverResponse(mRequests.take().execute());
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "Interrupted.", e);
-                        break;
-                    } catch (IOException e) {
-                        Log.e(TAG, "Failed to execute a request.", e);
-                    }
-                }
-            }
-        });
-        mThread.start();
-    }
-
-    private String deliverResponse(GenericJson response) {
-        //final Activity activity = getActivity();
-        final List<Entity> entities = ((AnalyzeEntitiesResponse) response).getEntities();
-        final int size = entities.size();
-        for (int i = 0; i < size; i++) {
-            Log.d("kk", entities.get(i).toString());
-        }
-
-        return response.toString();
-    }
-
     private static String convertResponseToString(BatchAnnotateImagesResponse response) {
         StringBuilder message = new StringBuilder("\n\n");
-
-        List<EntityAnnotation> labels = response.getResponses().get(0).getLabelAnnotations();
-        if (labels != null) {
-            for (EntityAnnotation label : labels) {
-                message.append(String.format(Locale.US, "%.3f: %s", label.getScore(), label.getDescription()));
-                message.append("\n");
-            }
-        } else {
-            message.append("nothing");
-        }
-        Log.d("kk", message.toString());
-        return message.toString();
+        Log.d("response", response.toString());
+        Log.d("get response", response.getResponses().toString());
+        Log.d("get response 0", response.getResponses().get(0).toString());
+        Log.d("get response 0", response.getResponses().get(0).getLabelAnnotations().toString());
+        return response.getResponses().get(0).getLabelAnnotations().toString();
     }
 
+    //json_parser for text
+    //input: string
+    //output: list of strings
+    private List<String> json_paser_for_text(String js){
+        try {
+            List<String> list = new ArrayList<>();
+            js = "{\"entities\":[{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"Text messaging\"},\"type\":\"COMMON\"},{\"text\":{\"beginOffset\":-1,\"content\":\"act\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"Text messaging\",\"salience\":0.69890994,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"messages\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"messages\",\"salience\":0.06526089,\"type\":\"WORK_OF_ART\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"characters\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"characters\",\"salience\":0.052793197,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"tablets\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"tablets\",\"salience\":0.03986082,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"laptops\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"laptops\",\"salience\":0.03986082,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"desktops\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"desktops\",\"salience\":0.03986082,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"devices\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"devices\",\"salience\":0.027865255,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"users\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"users\",\"salience\":0.017794142,\"type\":\"PERSON\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"mobile phones\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"mobile phones\",\"salience\":0.017794142,\"type\":\"CONSUMER_GOOD\"}],\"language\":\"en\"}\n";
+            JSONObject json = new JSONObject(js);
+            Log.d("fuck", json.getJSONArray("entities").toString());
+            JSONArray arr = json.getJSONArray("entities");
+            for(int i = 0; i < arr.length(); i++){
+                JSONObject obj = (JSONObject) arr.get(i);
+                Log.d("fuck", (String) obj.get("name"));
+                list.add((String) obj.get("name"));
+            }
+            return list;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.d("fuck", "fuck");
+            return null;
+        }
+    }
+
+    private List<String> json_paser_for_label(String js){
+        try {
+            List<String> list = new ArrayList<>();
+            js = "[{\"description\":\"map\",\"mid\":\"/m/04_tb\",\"score\":0.9879048466682434,\"topicality\":0.9879048466682434}, {\"description\":\"ecoregion\",\"mid\":\"/m/0cblv\",\"score\":0.6792283654212952,\"topicality\":0.6792283654212952}, {\"description\":\"area\",\"mid\":\"/m/0n0j\",\"score\":0.6720095872879028,\"topicality\":0.6720095872879028}, {\"description\":\"water resources\",\"mid\":\"/m/015s2f\",\"score\":0.6240043044090271,\"topicality\":0.6240043044090271}, {\"description\":\"world\",\"mid\":\"/m/09nm_\",\"score\":0.6175522804260254,\"topicality\":0.6175522804260254}]";
+            JSONArray arr = new JSONArray(js);
+
+            for(int i = 0; i < arr.length(); i++){
+                JSONObject obj = (JSONObject) arr.get(i);
+                Log.d("fuck", (String) obj.get("description"));
+                list.add((String) obj.get("description"));
+            }
+            return list;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.d("fuck", "fuck");
+            return null;
+        }
+    }
+
+}
+
+class GGLanguage extends AsyncTask<Object, Object, Object> {
+    private static final String API_KEY = "AIzaSyBD-58JXajoizqSzCVVyYkfsmEvxvfbChQ";
+    private String textToBeAnalyzed = "";
+    private AnalyzeEntitiesResponse response = null;
+    public GGLanguage(String s) {
+        textToBeAnalyzed = s;
+    }
+
+    @Override
+    protected AnalyzeEntitiesResponse doInBackground(Object... params) {
+
+        // following DDC's code
+        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+        CloudNaturalLanguage.Builder builder = new CloudNaturalLanguage.Builder(httpTransport, jsonFactory, null);
+        builder.setCloudNaturalLanguageRequestInitializer(new CloudNaturalLanguageRequestInitializer(API_KEY));
+        CloudNaturalLanguage naturalLanguageAPI = builder.build();
+        AnalyzeEntitiesRequest analyzeentityRequest = new AnalyzeEntitiesRequest();
+
+        // the parameters that are passed in
+                //SentimentScoreDatabaseHandler ssDB = (SentimentScoreDatabaseHandler) params[1];
+
+        Document document = new Document();
+        document.setType("PLAIN_TEXT");
+        document.setContent(textToBeAnalyzed);
+        analyzeentityRequest.setDocument(document);
+        Log.d("gog", "fuck");
+        Log.d("gog", analyzeentityRequest.toString());
+
+        try {
+            CloudNaturalLanguage.Documents.AnalyzeEntities sentimentRequest = naturalLanguageAPI.documents().analyzeEntities(analyzeentityRequest);
+
+            //Log.d("gog", sentimentRequest.toString());
+            //Log.d("gog", "fuck");
+            response = sentimentRequest.execute();
+            //Log.d("fuck", response.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
 }
