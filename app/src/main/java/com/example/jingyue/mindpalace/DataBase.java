@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteDatabase;
 // import android.widget.EditText;
 
 import java.util.TreeMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -21,8 +22,14 @@ import com.example.jingyue.mindpalace.data.MindContract;
 import com.example.jingyue.mindpalace.data.MindDbHelper;
 import com.example.jingyue.mindpalace.data.MindContract.MindEntry;
 
-
-public class Database extends AppCompatActivity {
+//////////////////////////////////
+//@Override
+//protected void onDestroy() {
+//   mDbHelper.close();
+//   super.onDestroy(); //TODO: need to be added in onDestroy of 
+//}
+/////////////////////////////////
+public class DataBase extends AppCompatActivity {
 
     private SQLiteDatabase mDb;
 
@@ -35,66 +42,43 @@ public class Database extends AppCompatActivity {
         int dumTime;
         String dumLocation;
         String[] dumFeatures;
-        //addNewItem(dumUri, dumTime, dumLocation, dumFeatures);
+        List<String> uris = analyzer(dumUri, dumTime, dumLocation, dumFeatures);
+    }
         
-        Map<String, Integer> values = new HashMap<String, Integer>();
-        for (int i = 0; i < 10; i++){
-            values.put(dumFeatures[i], 9 - i);
-        }
 
-        List<String> uris = new ArrayList<String>(); //uris is a list of uri's by precedence
-        Cursor cursorT = getTimedItems(dumTime);
-        while(cursorT.moveToNext()){
-            String item = cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_URI));
-            uris.add(item);
-        }
-        cursorT.close();
 
-        List<Cursor> cursorFs = new LinkedList<Cursor>();
-        for (String feature : dumFeatures){
-            Cursor cursorF = getRelatedItems(feature);
-            if (cursorF.getCount() != 0){
-                cursorFs.add(cursorF);
-            }
-        }
 
-        Map<Integer, String> rating = new TreeMap<Integer, String>();
-        for (Cursor cursor : cursorFs){
-            while (cursor.moveToNext()){
-                String uri = cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_URI));
-                List<String> features = new ArrayList<String>();
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE1)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE2)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE3)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE4)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE5)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE6)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE7)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE8)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE9)));
-                features.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE10)));
-                int score = 0;
-                for (int i = 0; i < 10; i++){
-                    Integer value = values.get(features[i]);
-                    if(value != null){
-                        score += (9 - i)*value;
-                    }
+
+
+    private Cursor getUri (String uri){ //could be empty uri
+        String[] projection = {MindEntry.COLUMN_URI};
+        String selection = MindEntry.COLUMN_URI + " = " + uri;
+        return mDb.query(
+            MindContract.MindEntry.TABLE_NAME,
+            projection,
+            selection,
+            null,
+            null,
+            null,
+            null
+        );
+    }
+
+    public List<String> getAllUris (String[] uris){ //
+        List<String> lst = new ArrayList<String>();
+        for (String uri : uris){
+            Cursor cursor = getUri(uri);
+            if (cursor.getCount() != 0){
+                while(cursor.moveToNext()){
+                    lst.add(cursor.getString(getColumnIndexOrThrow(MindEntry.COLUMN_URI)));
                 }
-                rating.put(score, uri);
             }
-            cursor.close();
         }
-
-        for (Map.Entry<Integer,String> entry : rating.entrySet()){
-            uris.add(entry.getValue());
-        }
-
-
-
+        return lst;
     }
 
 
-    private Cursor getTimedItems(int time) {
+    private Cursor getTimedItems(int time) { //check reletive items based on time
         String[] projection = {MindEntry.COLUMN_URI};
         int bound = 86400; //a day in terms of unix time in seconds
         String uppBound = Integer.toString(time + bound);
@@ -112,7 +96,7 @@ public class Database extends AppCompatActivity {
     }
 
 
-    private Cursor getFeaturedItems(String feature){
+    private Cursor getFeaturedItems(String feature){ //checck relative items based on features/tags from Google Cloud
         String[] projection = 
             {
                 MindEntry.COLUMN_TIME,
