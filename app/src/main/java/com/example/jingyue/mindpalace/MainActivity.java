@@ -268,10 +268,11 @@ public class MainActivity extends AppCompatActivity{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         String s = callCloudVision(bitmap);
         String[] featuresLst = toLength10(json_paser_for_label(s));
         if(query != Boolean.FALSE){
-            analyzer(uri.toString(), 1522573000, "DongBei", featuresLst); //TODO: it returns a list of string of uri or \text
+            analyzer(uri.toString(), 1522573000, "DongBei", featuresLst); //TODO: it returns a list of string of uri or "\\"+text
             return;
         }//Otherwise don't do it
         addNewItem(uri.toString(), 1522573000, "Shanghai", featuresLst );
@@ -305,10 +306,10 @@ public class MainActivity extends AppCompatActivity{
             String[] featuresLst = toLength10(json_paser_for_text(ret));
             if(query != Boolean.FALSE){
                 //TODO: pass repeated item
-                analyzer("\"+s, 152257310, "LA", featuresLst);
+                analyzer("\\"+s, 1522573010, "LA", featuresLst);
                 return; //TODO: analyzer returns a list of String of uri or \text
             }//Other
-            addNewItem("\"+s, 1522573010, "Shanghai", featuresLst);
+            addNewItem("\\"+s, 1522573010, "Shanghai", featuresLst);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
