@@ -28,7 +28,7 @@ public class DisplayScreen extends MainActivity{
 }
 */
 
-import android.app.Activity;
+/*import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -44,4 +44,4 @@ public class DisplayScreen extends Activity {
         setContentView(drawView);
 
     }
-}
+}*/

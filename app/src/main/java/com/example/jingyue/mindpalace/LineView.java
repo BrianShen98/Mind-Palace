@@ -49,7 +49,7 @@ public class LineView extends View {
         requestLayout();
     }
 }
-*/
+
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -90,4 +90,4 @@ public class LineView extends View {
         canvas.drawLine(20, 0, 0, 20, paint);
     }
 
-}
+}*/
