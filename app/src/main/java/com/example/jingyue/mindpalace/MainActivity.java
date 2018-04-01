@@ -17,9 +17,11 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -84,6 +86,7 @@ import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Iterator;
+
 import java.util.LinkedHashSet;
 
 import com.example.jingyue.mindpalace.data.MindContract;
@@ -123,6 +126,11 @@ public class MainActivity extends AppCompatActivity{
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
 
+    String inputText="";
+    private EditText mInput;
+    //private SQLiteDatabase mDb;
+
+
     private SQLiteDatabase mDb;
 
     @Override
@@ -134,6 +142,21 @@ public class MainActivity extends AppCompatActivity{
 
         MindDbHelper dbHelper = new MindDbHelper(this);
         mDb = dbHelper.getWritableDatabase();
+
+        //first cold start
+        if(PermissionUtils.requestPermission(
+                this,
+                CAMERA_PERMISSIONS_REQUEST,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA)) {
+            File dir = new File("mnt/sdcard/Download/");
+            File[] files = dir.listFiles();
+            for (int i = 0; i < files.length; ++i) {
+                File file = files[i];
+                db_image(Uri.fromFile(file));
+            }
+        }
+         mInput= (EditText) findViewById(R.id.editText);
 
         final Button button_start = (Button) findViewById(R.id.start);
         button_start.setOnClickListener(new View.OnClickListener() {
@@ -149,6 +172,24 @@ public class MainActivity extends AppCompatActivity{
 
             }
         });
+        final Button button_send = (Button) findViewById(R.id.send);
+        button_send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Log.d("d","i am in");
+                inputText = mInput.getText().toString();
+                //Log.d("d","haahahahah");
+                if(!inputText.equals(""));
+                {
+                    Log.d("d",inputText);
+                    db_text(inputText,true);
+                }
+
+
+            }
+        });
+        // Set up the input EditText so that it accepts multiple lines
+
 
         //mImageDetails = findViewById(R.id.image_details);
         //mMainImage = findViewById(R.id.main_image);
@@ -302,7 +343,7 @@ public class MainActivity extends AppCompatActivity{
 
         AsyncTask<Object, Object, Object> txt = new GGLanguage(s);
         try {
-            String ret = (String) txt.execute().get();
+            String ret = (String) txt.execute().get().toString();
             String[] featuresLst = toLength10(json_paser_for_text(ret));
             if(query != Boolean.FALSE){
                 //TODO: pass repeated item
@@ -598,7 +639,7 @@ public class MainActivity extends AppCompatActivity{
     private List<String> json_paser_for_text(String js){
         try {
             List<String> list = new ArrayList<>();
-            js = "{\"entities\":[{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"Text messaging\"},\"type\":\"COMMON\"},{\"text\":{\"beginOffset\":-1,\"content\":\"act\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"Text messaging\",\"salience\":0.69890994,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"messages\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"messages\",\"salience\":0.06526089,\"type\":\"WORK_OF_ART\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"characters\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"characters\",\"salience\":0.052793197,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"tablets\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"tablets\",\"salience\":0.03986082,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"laptops\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"laptops\",\"salience\":0.03986082,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"desktops\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"desktops\",\"salience\":0.03986082,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"devices\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"devices\",\"salience\":0.027865255,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"users\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"users\",\"salience\":0.017794142,\"type\":\"PERSON\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"mobile phones\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"mobile phones\",\"salience\":0.017794142,\"type\":\"CONSUMER_GOOD\"}],\"language\":\"en\"}\n";
+            //js = "{\"entities\":[{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"Text messaging\"},\"type\":\"COMMON\"},{\"text\":{\"beginOffset\":-1,\"content\":\"act\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"Text messaging\",\"salience\":0.69890994,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"messages\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"messages\",\"salience\":0.06526089,\"type\":\"WORK_OF_ART\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"characters\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"characters\",\"salience\":0.052793197,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"tablets\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"tablets\",\"salience\":0.03986082,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"laptops\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"laptops\",\"salience\":0.03986082,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"desktops\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"desktops\",\"salience\":0.03986082,\"type\":\"OTHER\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"devices\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"devices\",\"salience\":0.027865255,\"type\":\"CONSUMER_GOOD\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"users\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"users\",\"salience\":0.017794142,\"type\":\"PERSON\"},{\"mentions\":[{\"text\":{\"beginOffset\":-1,\"content\":\"mobile phones\"},\"type\":\"COMMON\"}],\"metadata\":{},\"name\":\"mobile phones\",\"salience\":0.017794142,\"type\":\"CONSUMER_GOOD\"}],\"language\":\"en\"}\n";
             JSONObject json = new JSONObject(js);
             Log.d("fuck", json.getJSONArray("entities").toString());
             JSONArray arr = json.getJSONArray("entities");
