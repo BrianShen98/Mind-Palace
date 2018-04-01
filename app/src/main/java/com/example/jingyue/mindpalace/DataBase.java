@@ -22,7 +22,7 @@ import com.example.jingyue.mindpalace.data.MindDbHelper;
 import com.example.jingyue.mindpalace.data.MindContract.MindEntry;
 
 
-public class MainActivity extends AppCompatActivity {
+public class Database extends AppCompatActivity {
 
     private SQLiteDatabase mDb;
 
