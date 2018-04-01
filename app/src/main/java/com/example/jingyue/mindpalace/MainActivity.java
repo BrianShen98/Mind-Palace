@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity{
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
 
-    private SQLiteDatabase mDb;
+    //private SQLiteDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity{
         //setSupportActionBar(toolbar);
 
         MindDbHelper dbHelper = new MindDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
+        //mDb = dbHelper.getWritableDatabase();
 
         final Button button_start = (Button) findViewById(R.id.start);
         button_start.setOnClickListener(new View.OnClickListener() {
@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity{
         String s = callCloudVision(bitmap);
         //TODO: database
         Log.d("lkl", s);
-        //json_paser_for_label(s);
+        json_paser_for_label(s);
     }
 
     private void db_text(String s){
@@ -512,7 +512,7 @@ public class MainActivity extends AppCompatActivity{
             AsyncTask<Object, Void, String> labelDetectionTask = new DetectionTask(this, preparelabelRequest(bitmap));
             AsyncTask<Object, Void, String> landmarkDetectionTask = new DetectionTask(this, preparelandmarkRequest(bitmap));
             AsyncTask<Object, Void, String> logoDetectionTask = new DetectionTask(this, preparelogoRequest(bitmap));
-            return logoDetectionTask.execute().get();
+            return labelDetectionTask.execute().get();
         } catch (IOException e) {
             return "failed to make API request because of other IOException " +
                     e.getMessage();
@@ -546,10 +546,10 @@ public class MainActivity extends AppCompatActivity{
 
     private static String convertResponseToString(BatchAnnotateImagesResponse response) {
         StringBuilder message = new StringBuilder("\n\n");
-        Log.d("response", response.toString());
+        /*Log.d("response", response.toString());
         Log.d("get response", response.getResponses().toString());
         Log.d("get response 0", response.getResponses().get(0).toString());
-        Log.d("get response 0", response.getResponses().get(0).getLabelAnnotations().toString());
+        Log.d("get response 0", response.getResponses().get(0).getLabelAnnotations().toString());*/
         return response.getResponses().get(0).getLabelAnnotations().toString();
     }
 
@@ -579,7 +579,7 @@ public class MainActivity extends AppCompatActivity{
     private List<String> json_paser_for_label(String js){
         try {
             List<String> list = new ArrayList<>();
-            js = "[{\"description\":\"map\",\"mid\":\"/m/04_tb\",\"score\":0.9879048466682434,\"topicality\":0.9879048466682434}, {\"description\":\"ecoregion\",\"mid\":\"/m/0cblv\",\"score\":0.6792283654212952,\"topicality\":0.6792283654212952}, {\"description\":\"area\",\"mid\":\"/m/0n0j\",\"score\":0.6720095872879028,\"topicality\":0.6720095872879028}, {\"description\":\"water resources\",\"mid\":\"/m/015s2f\",\"score\":0.6240043044090271,\"topicality\":0.6240043044090271}, {\"description\":\"world\",\"mid\":\"/m/09nm_\",\"score\":0.6175522804260254,\"topicality\":0.6175522804260254}]";
+            //js = "[{\"description\":\"map\",\"mid\":\"/m/04_tb\",\"score\":0.9879048466682434,\"topicality\":0.9879048466682434}, {\"description\":\"ecoregion\",\"mid\":\"/m/0cblv\",\"score\":0.6792283654212952,\"topicality\":0.6792283654212952}, {\"description\":\"area\",\"mid\":\"/m/0n0j\",\"score\":0.6720095872879028,\"topicality\":0.6720095872879028}, {\"description\":\"water resources\",\"mid\":\"/m/015s2f\",\"score\":0.6240043044090271,\"topicality\":0.6240043044090271}, {\"description\":\"world\",\"mid\":\"/m/09nm_\",\"score\":0.6175522804260254,\"topicality\":0.6175522804260254}]";
             JSONArray arr = new JSONArray(js);
 
             for(int i = 0; i < arr.length(); i++){
@@ -593,228 +593,5 @@ public class MainActivity extends AppCompatActivity{
             Log.d("fuck", "fuck");
             return null;
         }
-    }
-
-
-
-
-
-
-
-    /*
-    DataBase Utilities
-    */
-
-
-    private List<String> analyzer (String dumUri, int dumTime, String dumLocation, String[] dumFeatures){
-        //also add this uri to the database
-        Map<String, Integer> values = new HashMap<String, Integer>();
-        for (int i = 0; i < 10; i++){
-            values.put(dumFeatures[i], 9 - i);
-        }
-
-        List<String> uris = new ArrayList<String>(); //uris is a list of uri's by precedence
-        Cursor cursorT = getTimedItems(dumTime);
-        while(cursorT.moveToNext()){
-            String item = cursorT.getString(cursorT.getColumnIndexOrThrow(MindEntry.COLUMN_URI));
-            uris.add(item);
-        }
-        cursorT.close();
-
-        List<Cursor> cursorFs = new LinkedList<Cursor>();
-        for (String feature : dumFeatures){
-            Cursor cursorF = getFeaturedItems(feature);
-            if (cursorF.getCount() != 0){
-                cursorFs.add(cursorF);
-            }
-        }
-
-        Map<Integer, String> rating = new TreeMap<Integer, String>();
-        for (Cursor cursor : cursorFs){
-            while (cursor.moveToNext()){
-                String uri = cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_URI));
-                List<String> features = new ArrayList<String>();
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE1)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE2)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE3)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE4)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE5)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE6)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE7)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE8)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE9)));
-                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE10)));
-                int score = 0;
-                for (int i = 0; i < 10; i++){
-                    Integer value = values.get(features.get(i));
-                    if(value != null){
-                        score += (9 - i)*value;
-                    }
-                }
-                rating.put(score, uri);
-            }
-            cursor.close();
-        }
-
-        for (Map.Entry<Integer,String> entry : rating.entrySet()){
-            uris.add(entry.getValue());
-        }
-
-        addNewItem(dumUri, dumTime, dumLocation, dumFeatures);
-
-        return uris;
-    }
-
-    private Cursor getUri (String uri){ //could be empty uri
-        String[] projection = {MindEntry.COLUMN_URI};
-        String selection = MindEntry.COLUMN_URI + " = " + uri;
-        return mDb.query(
-                MindContract.MindEntry.TABLE_NAME,
-                projection,
-                selection,
-                null,
-                null,
-                null,
-                null
-        );
-    }
-
-    public List<String> getAllUris (String[] uris){ //
-        List<String> lst = new ArrayList<String>();
-        for (String uri : uris){
-            Cursor cursor = getUri(uri);
-            if (cursor.getCount() != 0){
-                while(cursor.moveToNext()){
-                    lst.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_URI)));
-                }
-            }
-        }
-        return lst;
-    }
-
-
-    private Cursor getTimedItems(int time) { //check reletive items based on time
-        String[] projection = {MindEntry.COLUMN_URI};
-        int bound = 86400; //a day in terms of unix time in seconds
-        String uppBound = Integer.toString(time + bound);
-        String lowBound = Integer.toString(time - bound);
-        String selection = MindEntry.COLUMN_TIME + " BETWEEN " + lowBound + " AND " + uppBound;
-        return mDb.query(
-                MindContract.MindEntry.TABLE_NAME,
-                projection,
-                selection,
-                null,
-                null,
-                null,
-                MindContract.MindEntry.COLUMN_TIME
-        );
-    }
-
-
-    private Cursor getFeaturedItems(String feature){ //checck relative items based on features/tags from Google Cloud
-        String[] projection =
-                {
-                        MindEntry.COLUMN_TIME,
-                        MindEntry.COLUMN_FEATURE1,
-                        MindEntry.COLUMN_FEATURE2,
-                        MindEntry.COLUMN_FEATURE3,
-                        MindEntry.COLUMN_FEATURE4,
-                        MindEntry.COLUMN_FEATURE5,
-                        MindEntry.COLUMN_FEATURE6,
-                        MindEntry.COLUMN_FEATURE7,
-                        MindEntry.COLUMN_FEATURE8,
-                        MindEntry.COLUMN_FEATURE9,
-                        MindEntry.COLUMN_FEATURE10
-                };
-
-        String selection =
-                MindEntry.COLUMN_FEATURE1 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE2 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE3 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE4 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE5 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE6 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE7 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE8 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE9 + " = " + feature + " OR " +
-                        MindEntry.COLUMN_FEATURE10 + " = " + feature;
-
-        return mDb.query(
-                MindContract.MindEntry.TABLE_NAME,
-                projection,
-                selection,
-                null,
-                null,
-                null,
-                null
-        );
-    }
-
-    private long addNewItem(String uri, int time, String location, String[] features) {
-        //return a unique _id
-        if (features.length != 10)
-        {
-            throw new IllegalArgumentException
-                    ("must be 10 features");
-        }
-        ContentValues cv = new ContentValues();
-        cv.put(MindContract.MindEntry.COLUMN_URI, uri);
-        cv.put(MindContract.MindEntry.COLUMN_TIME, time);
-        cv.put(MindContract.MindEntry.COLUMN_LOCATION, location);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE1, features[0]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE2, features[1]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE3, features[2]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE4, features[3]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE5, features[4]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE6, features[5]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE7, features[6]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE8, features[7]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE9, features[8]);
-        cv.put(MindContract.MindEntry.COLUMN_FEATURE10, features[9]);
-        return mDb.insert(MindContract.MindEntry.TABLE_NAME, null, cv);
-    }
-
-}
-
-class GGLanguage extends AsyncTask<Object, Object, Object> {
-    private static final String API_KEY = "AIzaSyBD-58JXajoizqSzCVVyYkfsmEvxvfbChQ";
-    private String textToBeAnalyzed = "";
-    private AnalyzeEntitiesResponse response = null;
-    public GGLanguage(String s) {
-        textToBeAnalyzed = s;
-    }
-
-    @Override
-    protected AnalyzeEntitiesResponse doInBackground(Object... params) {
-
-        // following DDC's code
-        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-        CloudNaturalLanguage.Builder builder = new CloudNaturalLanguage.Builder(httpTransport, jsonFactory, null);
-        builder.setCloudNaturalLanguageRequestInitializer(new CloudNaturalLanguageRequestInitializer(API_KEY));
-        CloudNaturalLanguage naturalLanguageAPI = builder.build();
-        AnalyzeEntitiesRequest analyzeentityRequest = new AnalyzeEntitiesRequest();
-
-        // the parameters that are passed in
-                //SentimentScoreDatabaseHandler ssDB = (SentimentScoreDatabaseHandler) params[1];
-
-        Document document = new Document();
-        document.setType("PLAIN_TEXT");
-        document.setContent(textToBeAnalyzed);
-        analyzeentityRequest.setDocument(document);
-        Log.d("gog", "fuck");
-        Log.d("gog", analyzeentityRequest.toString());
-
-        try {
-            CloudNaturalLanguage.Documents.AnalyzeEntities sentimentRequest = naturalLanguageAPI.documents().analyzeEntities(analyzeentityRequest);
-
-            //Log.d("gog", sentimentRequest.toString());
-            //Log.d("gog", "fuck");
-            response = sentimentRequest.execute();
-            //Log.d("fuck", response.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return response;
     }
 }
