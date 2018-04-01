@@ -21,7 +21,7 @@ public class MindDbHelper extends SQLiteOpenHelper{
 
                 "CREATE TABLE " + MindEntry.TABLE_NAME + " (" +
                 MindEntry._ID               + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                MindEntry.COLUMN_URI        + " TEXT PRIMARY KEY NOT NULL DEFAULT '', " +
+                MindEntry.COLUMN_URI        + " TEXT NOT NULL DEFAULT '', " +
                 MindEntry.COLUMN_TIME       + " INTEGER NOT NULL DEFAULT 0, " +
                 MindEntry.COLUMN_LOCATION   + " TEXT NOT NULL DEFAULT '', " + 
                 MindEntry.COLUMN_FEATURE1   + " TEXT NOT NULL DEFAULT '', " +
