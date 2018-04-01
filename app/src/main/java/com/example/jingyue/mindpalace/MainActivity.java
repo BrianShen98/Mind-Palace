@@ -72,6 +72,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -83,6 +84,9 @@ import java.io.FileInputStream;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.HashMap;
+import java.util.ListIterator;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 import com.example.jingyue.mindpalace.data.MindContract;
 import com.example.jingyue.mindpalace.data.MindDbHelper;
@@ -120,9 +124,13 @@ public class MainActivity extends AppCompatActivity{
     private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
+
     String inputText="";
     private EditText mInput;
     //private SQLiteDatabase mDb;
+
+
+    private SQLiteDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,7 +140,7 @@ public class MainActivity extends AppCompatActivity{
         //setSupportActionBar(toolbar);
 
         MindDbHelper dbHelper = new MindDbHelper(this);
-        //mDb = dbHelper.getWritableDatabase();
+        mDb = dbHelper.getWritableDatabase();
 
          mInput= (EditText) findViewById(R.id.editText);
 
@@ -258,16 +266,29 @@ public class MainActivity extends AppCompatActivity{
             Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
         }
     }
+
+    private String[] toLength10 (List<String> lst){
+        Iterator<String> itr = lst.iterator();
+        String[] featuresLst = new String[10];
+        int i = 0;
+        while(itr.hasNext() && i != 10) {
+            featuresLst[i] = itr.next();
+            i++;
+        }
+        if (i <= 9){
+            while (i != 10){
+                featuresLst[i] = "";
+            }
+        }
+        return featuresLst;
+    }
+
     private void db_image(Uri uri){
         db_image(uri, Boolean.FALSE);
     }
 
-    private void db_image(Uri uri, Boolean query){
+    private void db_image(Uri uri, Boolean query){ //TODO:pass in timestamp for image and text, or parse it in this function
         //TODO: remove repeated items
-        if(query == Boolean.FALSE){
-            //TODO: pass repeated item
-        }//Otherwise don't do it
-
         Bitmap bitmap = null;
         try {
             bitmap = scaleBitmapDown(
@@ -277,7 +298,24 @@ public class MainActivity extends AppCompatActivity{
             e.printStackTrace();
         }
         String s = callCloudVision(bitmap);
-        //TODO: database
+        String[] featuresLst = toLength10(json_paser_for_label(s));
+        if(query != Boolean.FALSE){
+            analyzer(uri.toString(), 1522573000, "DongBei", featuresLst); //TODO: it returns a list of string of uri or \text
+            return;
+        }//Otherwise don't do it
+        addNewItem(uri.toString(), 1522573000, "Shanghai", featuresLst );
+        List<String> lst = analyzer(uri.toString(), 1522573000, "Shanghai", featuresLst );
+        int i = 0;
+        Log.d("beforedbFind", "before iterating");
+        for (i = 0; i < lst.size(); i++){
+            Log.d("dbFind", lst.get(i));
+        }
+        if (i == 0){
+            Log.d("dbFind", "nothing found");
+        }
+        Log.d("db", "after adding");
+        //can add analyzer for testing
+
         Log.d("lkl", s);
         json_paser_for_label(s);
     }
@@ -288,15 +326,18 @@ public class MainActivity extends AppCompatActivity{
 
     private void db_text(String s, Boolean query){
         //TODO: remove repeated items
-        if(query == Boolean.FALSE){
-            //TODO: pass repeated item
-        }//Other
+
 
         AsyncTask<Object, Object, Object> txt = new GGLanguage(s);
         try {
             String ret = (String) txt.execute().get().toString();
-            json_paser_for_text(ret);
-            //TODO: databse
+            String[] featuresLst = toLength10(json_paser_for_text(ret));
+            if(query != Boolean.FALSE){
+                //TODO: pass repeated item
+                analyzer("\\"+s, 152257310, "LA", featuresLst);
+                return; //TODO: analyzer returns a list of String of uri or \text
+            }//Other
+            addNewItem("\\"+s, 1522573010, "Shanghai", featuresLst);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -620,4 +661,197 @@ public class MainActivity extends AppCompatActivity{
             return null;
         }
     }
+
+    /*
+    DataBase Utilities
+    */
+
+
+    private List<String> analyzer (String dumUri, int dumTime, String dumLocation, String[] dumFeatures){
+        //also add this uri to the database
+        Map<String, Integer> values = new HashMap<String, Integer>();
+        for (int i = 0; i < 10; i++){
+            values.put(dumFeatures[i], 9 - i);
+        }
+
+        List<String> uris = new ArrayList<String>(); //uris is a list of uri's by precedence
+
+        LinkedHashSet<String> set = new LinkedHashSet<String>();
+
+
+        Cursor cursorT = getTimedItems(dumTime);
+        while(cursorT.moveToNext()){
+            String item = cursorT.getString(cursorT.getColumnIndexOrThrow(MindEntry.COLUMN_URI));
+            set.add(item);
+        }
+        cursorT.close();
+
+        List<Cursor> cursorFs = new LinkedList<Cursor>();
+        for (String feature : dumFeatures){
+            Cursor cursorF = getFeaturedItems(feature);
+            if (cursorF.getCount() != 0){
+                cursorFs.add(cursorF);
+            }
+        }
+
+        Map<Integer, String> rating = new TreeMap<Integer, String>();
+        for (Cursor cursor : cursorFs){
+            while (cursor.moveToNext()){
+                String uri = cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_URI));
+                List<String> features = new ArrayList<String>();
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE1)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE2)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE3)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE4)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE5)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE6)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE7)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE8)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE9)));
+                features.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_FEATURE10)));
+                int score = 0;
+                for (int i = 0; i < 10; i++){
+                    Integer value = values.get(features.get(i));
+                    if(value != null){
+                        score += (9 - i)*value;
+                    }
+                }
+                rating.put(score, uri);
+            }
+            cursor.close();
+        }
+
+
+
+        for (Map.Entry<Integer,String> entry : rating.entrySet()){
+            //uris.add(entry.getValue());
+            set.add(entry.getValue());
+        }
+
+        Iterator<String> iterator = set.iterator();
+        while(iterator.hasNext()){
+            uris.add(iterator.next());
+            Log.d("dbListing", "added from analyzer");
+        }
+
+        //addNewItem(dumUri, dumTime, dumLocation, dumFeatures);
+
+        return uris;
+    }
+
+    private Cursor getUri (String uri){ //could be empty uri
+        String[] projection = {MindEntry.COLUMN_URI};
+        String selection = MindEntry.COLUMN_URI + " = " + "'" + uri + "'";
+        return mDb.query(
+                MindContract.MindEntry.TABLE_NAME,
+                projection,
+                selection,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    public List<String> getAllUris (String[] uris){ //
+        List<String> lst = new ArrayList<String>();
+        for (String uri : uris){
+            Cursor cursor = getUri(uri);
+            if (cursor.getCount() != 0){
+                while(cursor.moveToNext()){
+                    lst.add(cursor.getString(cursor.getColumnIndexOrThrow(MindEntry.COLUMN_URI)));
+                }
+            }
+        }
+        return lst;
+    }
+
+
+    private Cursor getTimedItems(int time) { //check reletive items based on time
+        String[] projection = {MindEntry.COLUMN_URI};
+        int bound = 86400; //a day in terms of unix time in seconds
+        String uppBound = Integer.toString(time + bound);
+        String lowBound = Integer.toString(time - bound);
+        String selection = MindEntry.COLUMN_TIME + " BETWEEN " + lowBound + " AND " + uppBound;
+        return mDb.query(
+                MindContract.MindEntry.TABLE_NAME,
+                projection,
+                selection,
+                null,
+                null,
+                null,
+                MindContract.MindEntry.COLUMN_TIME
+        );
+    }
+
+
+    private Cursor getFeaturedItems(String feature){ //checck relative items based on features/tags from Google Cloud
+        String[] projection =
+                {
+                        MindEntry.COLUMN_TIME,
+                        MindEntry.COLUMN_FEATURE1,
+                        MindEntry.COLUMN_FEATURE2,
+                        MindEntry.COLUMN_FEATURE3,
+                        MindEntry.COLUMN_FEATURE4,
+                        MindEntry.COLUMN_FEATURE5,
+                        MindEntry.COLUMN_FEATURE6,
+                        MindEntry.COLUMN_FEATURE7,
+                        MindEntry.COLUMN_FEATURE8,
+                        MindEntry.COLUMN_FEATURE9,
+                        MindEntry.COLUMN_FEATURE10
+                };
+        String selection =
+                MindEntry.COLUMN_FEATURE1 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE2 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE3 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE4 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE5 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE6 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE7 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE8 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE9 + " = " + "'" + feature + "'" + " OR " +
+                MindEntry.COLUMN_FEATURE10 + " = " + "'" + feature + "'";
+
+        return mDb.query(
+                MindContract.MindEntry.TABLE_NAME,
+                null,
+                selection,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private long addNewItem(String uri, int time, String location, String[] features) {
+        //return a unique _id
+        if (features.length != 10)
+        {
+            throw new IllegalArgumentException
+                    ("must be 10 features");
+        }
+        ContentValues cv = new ContentValues();
+        cv.put(MindContract.MindEntry.COLUMN_URI, uri);
+        cv.put(MindContract.MindEntry.COLUMN_TIME, time);
+        cv.put(MindContract.MindEntry.COLUMN_LOCATION, location);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE1, features[0]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE2, features[1]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE3, features[2]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE4, features[3]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE5, features[4]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE6, features[5]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE7, features[6]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE8, features[7]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE9, features[8]);
+        cv.put(MindContract.MindEntry.COLUMN_FEATURE10, features[9]);
+
+
+        mDb.insert(MindContract.MindEntry.TABLE_NAME, null, cv);
+
+        Log.d("db", "added");
+
+        return 0;
+
+    }
+
 }
