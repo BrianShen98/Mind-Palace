@@ -305,10 +305,10 @@ public class MainActivity extends AppCompatActivity{
             String[] featuresLst = toLength10(json_paser_for_text(ret));
             if(query != Boolean.FALSE){
                 //TODO: pass repeated item
-                analyzer("\"+s, 152257310, "LA", featuresLst);
+                analyzer("\\"+s, 152257310, "LA", featuresLst);
                 return; //TODO: analyzer returns a list of String of uri or \text
             }//Other
-            addNewItem("\"+s, 1522573010, "Shanghai", featuresLst);
+            addNewItem("\\"+s, 1522573010, "Shanghai", featuresLst);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
