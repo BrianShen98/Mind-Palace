@@ -233,7 +233,14 @@ public class MainActivity extends AppCompatActivity{
         }
     }
     private void db_image(Uri uri){
-            //TODO: remove repeated items
+        db_image(uri, Boolean.FALSE);
+    }
+    private void db_image(Uri uri, Boolean query){
+        //TODO: remove repeated items
+        if(query == Boolean.FALSE){
+            //TODO: pass repeated item
+        }//Otherwise don't do it
+
         Bitmap bitmap = null;
         try {
             bitmap = scaleBitmapDown(
@@ -246,7 +253,17 @@ public class MainActivity extends AppCompatActivity{
         //TODO: database
         json_paser_for_label(s);
     }
+
     private void db_text(String s){
+        db_text(s, Boolean.FALSE);
+    }
+
+    private void db_text(String s, Boolean query){
+        //TODO: remove repeated items
+        if(query == Boolean.FALSE){
+            //TODO: pass repeated item
+        }//Other
+
         AsyncTask<Object, Object, Object> txt = new GGLanguage(s);
         try {
             String ret = (String) txt.execute().get();
