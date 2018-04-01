@@ -62,6 +62,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import 	android.graphics.BitmapFactory;
+import java.io.FileInputStream;
 
 
 
@@ -180,6 +182,17 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void uploadImage(Uri uri) {
+            /*
+                ImageView mMainImage = findViewById(R.id.main_view);
+                File file = new File("mnt/sdcard/Download/images.jpg");
+                //Environment.getExternalStorageDirectory().getPath() + uri.getPath());
+                FileInputStream fis = new FileInputStream(file);
+                BitmapFactory.Options opts = new BitmapFactory.Options();
+                opts.inSampleSize = 2;
+                Bitmap res = BitmapFactory.decodeStream(fis, null, opts);
+                mMainImage.setImageBitmap(res);
+
+             */
         if (uri != null) {
             try {
                 // scale the image to save on bandwidth
