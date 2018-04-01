@@ -80,6 +80,8 @@ import java.io.FileInputStream;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.HashMap;
+import java.util.ListIterator;
+import java.util.Iterator;
 
 import com.example.jingyue.mindpalace.data.MindContract;
 import com.example.jingyue.mindpalace.data.MindDbHelper;
@@ -232,6 +234,23 @@ public class MainActivity extends AppCompatActivity{
             Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
         }
     }
+
+    private String[] toLength10 (List<String> lst){
+        Iterator<String> itr = lst.iterator();
+        String[] featuresLst = new String[10];
+        int i = 0;
+        while(itr.hasNext() && i != 10) {
+            featuresLst[i] = itr.next();
+            i++;
+        }
+        if (i <= 9){
+            while (i != 10){
+                featuresLst[i] = "";
+            }
+        }
+        return featuresLst;
+    }
+
     private void db_image(Uri uri){
             //TODO: remove repeated items
         Bitmap bitmap = null;
@@ -244,13 +263,16 @@ public class MainActivity extends AppCompatActivity{
         }
         String s = callCloudVision(bitmap);
         //TODO: database
-        json_paser_for_label(s);
+        String[] featuresLst = toLength10(json_paser_for_label(s));
+        addNewItem(uri.toString(), 1522573000, "Shanghai", featuresLst );
+        //can add analyzer for testing
     }
     private void db_text(String s){
         AsyncTask<Object, Object, Object> txt = new GGLanguage(s);
         try {
             String ret = (String) txt.execute().get();
-            json_paser_for_text(ret);
+            String[] featuresLst = toLength10(json_paser_for_text(ret));
+            addNewItem("\\\\"+s, 1522573010, "Shanghai", featuresLst);
             //TODO: databse
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -426,7 +448,7 @@ public class MainActivity extends AppCompatActivity{
     private List<String> json_paser_for_label(String js){
         try {
             List<String> list = new ArrayList<>();
-            js = "[{\"description\":\"map\",\"mid\":\"/m/04_tb\",\"score\":0.9879048466682434,\"topicality\":0.9879048466682434}, {\"description\":\"ecoregion\",\"mid\":\"/m/0cblv\",\"score\":0.6792283654212952,\"topicality\":0.6792283654212952}, {\"description\":\"area\",\"mid\":\"/m/0n0j\",\"score\":0.6720095872879028,\"topicality\":0.6720095872879028}, {\"description\":\"water resources\",\"mid\":\"/m/015s2f\",\"score\":0.6240043044090271,\"topicality\":0.6240043044090271}, {\"description\":\"world\",\"mid\":\"/m/09nm_\",\"score\":0.6175522804260254,\"topicality\":0.6175522804260254}]";
+            //js = "[{\"description\":\"map\",\"mid\":\"/m/04_tb\",\"score\":0.9879048466682434,\"topicality\":0.9879048466682434}, {\"description\":\"ecoregion\",\"mid\":\"/m/0cblv\",\"score\":0.6792283654212952,\"topicality\":0.6792283654212952}, {\"description\":\"area\",\"mid\":\"/m/0n0j\",\"score\":0.6720095872879028,\"topicality\":0.6720095872879028}, {\"description\":\"water resources\",\"mid\":\"/m/015s2f\",\"score\":0.6240043044090271,\"topicality\":0.6240043044090271}, {\"description\":\"world\",\"mid\":\"/m/09nm_\",\"score\":0.6175522804260254,\"topicality\":0.6175522804260254}]";
             JSONArray arr = new JSONArray(js);
 
             for(int i = 0; i < arr.length(); i++){

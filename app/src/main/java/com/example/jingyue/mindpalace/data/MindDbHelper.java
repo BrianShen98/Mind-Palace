@@ -21,7 +21,7 @@ public class MindDbHelper extends SQLiteOpenHelper{
 
                 "CREATE TABLE " + MindEntry.TABLE_NAME + " (" +
                 MindEntry._ID               + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                MindEntry.COLUMN_URI        + " TEXT PRIMARY NOT NULL DEFAULT '', " + 
+                MindEntry.COLUMN_URI        + " TEXT PRIMARY KEY NOT NULL DEFAULT '', " +
                 MindEntry.COLUMN_TIME       + " INTEGER NOT NULL DEFAULT 0, " +
                 MindEntry.COLUMN_LOCATION   + " TEXT NOT NULL DEFAULT '', " + 
                 MindEntry.COLUMN_FEATURE1   + " TEXT NOT NULL DEFAULT '', " +
@@ -33,7 +33,7 @@ public class MindDbHelper extends SQLiteOpenHelper{
                 MindEntry.COLUMN_FEATURE7   + " TEXT NOT NULL DEFAULT '', " +
                 MindEntry.COLUMN_FEATURE8   + " TEXT NOT NULL DEFAULT '', " +
                 MindEntry.COLUMN_FEATURE9   + " TEXT NOT NULL DEFAULT '', " +
-                MindEntry.COLUMN_FEATURE10  + " TEXT NOT NULL DEFAULT '', " + ");";
+                MindEntry.COLUMN_FEATURE10  + " TEXT NOT NULL DEFAULT ''" + ");";
 
         sqLiteDatabase.execSQL(SQL_CREATE_TABLE);
     }
