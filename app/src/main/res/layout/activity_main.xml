@@ -4,9 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:background="@drawable/background"
-    >
+    tools:context=".MainActivity">
 
     <Button
         android:id="@+id/start"
@@ -15,8 +13,8 @@
         android:background="@drawable/ripple_effect"
         android:text="Start"
         android:textStyle="bold"
-        tools:layout_editor_absoluteX="132dp"
-        tools:layout_editor_absoluteY="42dp" />
+        tools:layout_editor_absoluteX="126dp"
+        tools:layout_editor_absoluteY="376dp" />
 
 
 </android.support.constraint.ConstraintLayout>
