@@ -28,20 +28,34 @@ public class DisplayScreen extends MainActivity{
 }
 */
 
-import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.ImageView;
 
-public class DisplayScreen extends Activity {
-    LineView drawView;
+public class DisplayScreen extends AppCompatActivity {
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_display_screen);
 
-        drawView = new LineView(this);
-        drawView.setBackgroundColor(Color.WHITE);
-        setContentView(drawView);
+
+        //4 lines
+        LineView line1 = (LineView)findViewById(R.id.path1);
+        line1.bringToFront();
+        LineView line2 = (LineView)findViewById(R.id.path2);
+        LineView line3 = (LineView)findViewById(R.id.path3);
+        LineView line4 = (LineView)findViewById(R.id.path4);
+
+
+        line1.init(420,650,305,350);
+        line2.init(660,650,770,340);
+        line3.init(430,890,305,1200);
+        line4.init(660,880,770,1195);
+
 
     }
 }
