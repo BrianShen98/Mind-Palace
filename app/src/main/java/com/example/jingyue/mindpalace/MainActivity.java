@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity{
                 db_image(Uri.fromFile(file));
             }
         }*/
-        
+
         //Toolbar toolbar = findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
 
